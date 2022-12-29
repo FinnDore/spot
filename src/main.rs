@@ -28,9 +28,11 @@ async fn main() {
 
     // build our application with a single route
     let app = Router::new().route("/current_song", get(get_current_song_handler));
-    println!("Running server on 0.0.0.0:3001");
+    let port = std::env::var("PORT").unwrap_or("3001".to_string());
+    let host = format!("0.0.0.0:{:}", port);
+    println!("Running server on {:}", host);
     // run it with hyper on localhost:3000
-    axum::Server::bind(&"0.0.0.0:3001".parse().unwrap())
+    axum::Server::bind(&host.to_string().parse().unwrap())
         .serve(app.into_make_service())
         .await
         .unwrap();
