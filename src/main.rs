@@ -1,19 +1,34 @@
 mod spotify;
 
+use std::{env, sync::Arc};
+
 use axum::{
+    handler::{Handler, Layered},
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::get,
-    Json, Router,
+    Extension, Json, Router,
 };
-use serde::{Deserialize, Serialize};
-use std::env;
-const SPOTIFY_URL: &str = "https://api.spotify.com/v1";
+
+use spotify::Spot;
+
+use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() {
+    let state = Arc::new(Mutex::new(State {
+        spot: Spot::new(
+            env::var("SPOTIFY_CLIENT_ID").expect("Expected SPOTIFY_CLIENT_ID env var"),
+            env::var("SPOTIFY_CLIENT_SECRET").expect("Expected SPOTIFY_CLIENT_SECRET env var"),
+            env::var("SPOTIFY_REFRESH_TOKEN").expect("Expected SPOTIFY_REFRESH_TOKEN env var"),
+        ),
+    }));
+
     // build our application with a single route
-    let app = Router::new().route("/current_song", get(get_current_song_handler));
+    let app = Router::new()
+        .route("/current_song", get(get_current_song))
+        .layer(Extension(state));
+
     let port = std::env::var("PORT").unwrap_or("3001".to_string());
     let host = format!("0.0.0.0:{:}", port);
     println!("Running server on {:}", host);
@@ -24,14 +39,15 @@ async fn main() {
         .unwrap();
 }
 
-async fn get_current_song_handler() -> Response {
-    let mut spot_client = spotify::Spot::new(
-        env::var("SPOTIFY_CLIENT_ID").expect("Expected SPOTIFY_CLIENT_ID env var"),
-        env::var("SPOTIFY_CLIENT_SECRET").expect("Expected SPOTIFY_CLIENT_SECRET env var"),
-        env::var("SPOTIFY_REFRESH_TOKEN").expect("Expected SPOTIFY_REFRESH_TOKEN env var"),
-    );
+struct State {
+    spot: Spot,
+}
 
-    let current_song = spot_client.get_current_song().await;
+type SharedState = Arc<Mutex<State>>;
+
+async fn get_current_song(Extension(state): Extension<SharedState>) -> Response {
+    let spot = &mut state.lock().await.spot;
+    let current_song = spot.get_current_song().await;
     if let Ok(song) = &current_song {
         Json(song).into_response()
     } else {
@@ -41,64 +57,6 @@ async fn get_current_song_handler() -> Response {
             .unwrap()
             .into_response()
     }
-
-    // if let Some(current_song) = get_current_song().await {
-    //     return Json(current_song).into_response();
-    // } else {
-    //     Json(CurrentSong {
-    //         progress: 0,
-    //         item: Item {
-    //             name: "No song playing".to_string(),
-    //         },
-    //     })
-    //     .into_response()
-    // }
-}
-
-async fn get_current_song() -> Option<CurrentSong> {
-    let client = reqwest::Client::new();
-    let token = std::env::var("SPOTIFY_TOKEN").expect("Expected SPOTIFY_TOKEN env var");
-    let res = client
-        .get(format!("{:}/me/player/currently-playing", SPOTIFY_URL))
-        .header("authorization", format!("Bearer {:}", token))
-        .send()
-        .await;
-
-    if let Err(error) = &res {
-        println!("Could not get current song ${:#?}", error);
-        return None;
-    }
-    let result = res.unwrap();
-    let body = result.text().await;
-
-    if let Err(err) = &body {
-        println!("Could not decode spotfiy body {:?}", err);
-        return None;
-    }
-
-    let current_info: Result<CurrentSong, serde_json::Error> = serde_json::from_str(&body.unwrap());
-
-    if let Err(err) = &current_info {
-        println!(
-            "Could not parse spotify response to json {:?} err: {:?}",
-            current_info, err
-        );
-        return None;
-    }
-
-    Some(current_info.unwrap())
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct CurrentSong {
-    #[serde(rename = "progress_ms")]
-    progress: u128,
-    item: Item,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct Item {
-    name: String,
 }
 
 // Make our own error that wraps `anyhow::Error`.
