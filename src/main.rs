@@ -1,3 +1,5 @@
+mod spotify;
+
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
@@ -5,27 +7,11 @@ use axum::{
     Json, Router,
 };
 use serde::{Deserialize, Serialize};
-
+use std::env;
 const SPOTIFY_URL: &str = "https://api.spotify.com/v1";
-async fn get_current_song_handler() -> Response {
-    if let Some(current_song) = get_current_song().await {
-        return Json(current_song).into_response();
-    } else {
-        Json(CurrentSong {
-            progress: 0,
-            item: Item {
-                name: "No song playing".to_string(),
-            },
-        })
-        .into_response()
-    }
-}
 
 #[tokio::main]
 async fn main() {
-    let current_song = get_current_song().await;
-    println!("{:#?}", current_song.unwrap());
-
     // build our application with a single route
     let app = Router::new().route("/current_song", get(get_current_song_handler));
     let port = std::env::var("PORT").unwrap_or("3001".to_string());
@@ -36,6 +22,32 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+}
+
+async fn get_current_song_handler() -> Response {
+    let mut spot_client = spotify::Spot::new(
+        env::var("SPOTIFY_CLIENT_ID").expect("Expected SPOTIFY_CLIENT_ID env var"),
+        env::var("SPOTIFY_CLIENT_SECRET").expect("Expected SPOTIFY_CLIENT_SECRET env var"),
+        env::var("SPOTIFY_REFRESH_TOKEN").expect("Expected SPOTIFY_REFRESH_TOKEN env var"),
+    );
+
+    let current_song = spot_client
+        .get_current_song()
+        .await
+        .unwrap_or("No song playing".to_string());
+
+    Json(current_song).into_response()
+    // if let Some(current_song) = get_current_song().await {
+    //     return Json(current_song).into_response();
+    // } else {
+    //     Json(CurrentSong {
+    //         progress: 0,
+    //         item: Item {
+    //             name: "No song playing".to_string(),
+    //         },
+    //     })
+    //     .into_response()
+    // }
 }
 
 async fn get_current_song() -> Option<CurrentSong> {
