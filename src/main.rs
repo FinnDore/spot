@@ -31,12 +31,17 @@ async fn get_current_song_handler() -> Response {
         env::var("SPOTIFY_REFRESH_TOKEN").expect("Expected SPOTIFY_REFRESH_TOKEN env var"),
     );
 
-    let current_song = spot_client
-        .get_current_song()
-        .await
-        .unwrap_or("No song playing".to_string());
+    let current_song = spot_client.get_current_song().await;
+    if let Ok(song) = &current_song {
+        Json(song).into_response()
+    } else {
+        Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body("Could not get current song".to_string())
+            .unwrap()
+            .into_response()
+    }
 
-    Json(current_song).into_response()
     // if let Some(current_song) = get_current_song().await {
     //     return Json(current_song).into_response();
     // } else {

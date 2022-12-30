@@ -1,3 +1,5 @@
+use serde::{Deserialize, Serialize};
+
 pub struct Spot {
     pub client_id: String,
     pub client_secret: String,
@@ -48,17 +50,18 @@ impl Spot {
             return Err(());
         }
 
-        let json: serde_json::Value = json.unwrap();
-        self.token = json["access_token"].to_string().replace("\"", "");
-        self.expires_at = json["expires_in"].as_i64().unwrap() + chrono::Utc::now().timestamp();
+        let json: AuthResponse = json.unwrap();
+        self.token = json.access_token;
+        self.expires_at = json.expires_in + chrono::Utc::now().timestamp();
+
         println!("Updated spotify token");
         Ok(())
     }
 
-    pub async fn get_current_song(&mut self) -> Result<String, Box<dyn std::error::Error>> {
+    pub async fn get_current_song(&mut self) -> Result<CurrentSong, ()> {
         if chrono::Utc::now().timestamp() > self.expires_at {
             if let Err(_) = self.get_token().await {
-                return Ok("No song playing".to_string());
+                return Err(());
             }
         }
 
@@ -68,28 +71,83 @@ impl Spot {
             .header("authorization", format!("Bearer {:}", self.token))
             .send()
             .await;
-        println!("Bearer {:?}", self.token);
+
         if let Err(error) = &res {
             println!("Could not get current song ${:#?}", error);
-            return Ok("No song playing".to_string());
+            return Err(());
         }
 
         let response = res.unwrap();
         if !response.status().is_success() {
             println!("Could not get current song ${:#?}", response);
-            return Ok("No song playing".to_string());
+            return Err(());
         }
 
         let body = response.text().await;
 
         if let Err(err) = &body {
             println!("Could not decode spotify body {:?}", err);
-            return Ok("No song playing".to_string());
+            return Err(());
         }
 
-        let json: serde_json::Value = serde_json::from_str(&body.unwrap())?;
-        println!("{:#?}", json);
-        let song = json["item"]["name"].to_string();
-        Ok(song)
+        let json = serde_json::from_str(&body.unwrap());
+
+        if let Err(err) = &json {
+            println!("Could not parse spotify response to json {:?}", err);
+            return Err(());
+        }
+
+        Ok(json.unwrap())
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct AuthResponse {
+    access_token: String,
+    expires_in: i64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CurrentSong {
+    progress_ms: u128,
+    timestamp: u128,
+    item: Item,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Item {
+    name: String,
+    duration_ms: u128,
+    preview_url: String,
+    album: Album,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Album {
+    album_type: String,
+    artists: Vec<Artist>,
+    external_urls: ExternalUrls,
+    images: Vec<Image>,
+    name: String,
+    uri: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct Artist {
+    external_urls: ExternalUrls,
+    href: String,
+    name: String,
+    uri: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ExternalUrls {
+    spotify: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Image {
+    height: u128,
+    url: String,
+    width: u128,
 }
