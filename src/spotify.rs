@@ -127,6 +127,7 @@ pub struct Item {
     preview_url: String,
     album: Album,
     artists: Vec<Artist>,
+    external_urls: ExternalUrls,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
