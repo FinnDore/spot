@@ -117,6 +117,7 @@ pub struct CurrentSong {
     progress_ms: u128,
     timestamp: u128,
     item: Item,
+    is_playing: bool,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
