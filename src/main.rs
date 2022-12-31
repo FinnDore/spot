@@ -3,7 +3,7 @@ mod spotify;
 use std::{env, sync::Arc};
 
 use axum::{
-    handler::{Handler, Layered},
+    body,
     http::StatusCode,
     response::{IntoResponse, Response},
     routing::get,
@@ -24,15 +24,16 @@ async fn main() {
         ),
     }));
 
-    // build our application with a single route
+    let state_two = state.clone();
     let app = Router::new()
         .route("/current_song", get(get_current_song))
-        .layer(Extension(state));
+        .layer(Extension(state))
+        .layer(Extension(state_two));
 
     let port = std::env::var("PORT").unwrap_or("3001".to_string());
     let host = format!("0.0.0.0:{:}", port);
     println!("Running server on {:}", host);
-    // run it with hyper on localhost:3000
+
     axum::Server::bind(&host.to_string().parse().unwrap())
         .serve(app.into_make_service())
         .await
@@ -47,15 +48,13 @@ type SharedState = Arc<Mutex<State>>;
 
 async fn get_current_song(Extension(state): Extension<SharedState>) -> Response {
     let spot = &mut state.lock().await.spot;
-    let current_song = spot.get_current_song().await;
-    if let Ok(song) = &current_song {
-        Json(song).into_response()
-    } else {
-        Response::builder()
-            .status(StatusCode::INTERNAL_SERVER_ERROR)
-            .body("Could not get current song".to_string())
+    match spot.get_current_song().await {
+        Ok(song) => Json(song).into_response(),
+        Err(_) => Response::builder()
+            .status(StatusCode::NO_CONTENT)
+            .body(body::Empty::new())
             .unwrap()
-            .into_response()
+            .into_response(),
     }
 }
 

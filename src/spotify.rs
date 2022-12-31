@@ -83,8 +83,13 @@ impl Spot {
             return Err(());
         }
 
-        let body = response.text().await;
+        if response.status() == 204 {
+            // No song playing
+            return Err(());
+        }
 
+        let body = response.text().await;
+        // 204 send without body when no song
         if let Err(err) = &body {
             println!("Could not decode spotify body {:?}", err);
             return Err(());
