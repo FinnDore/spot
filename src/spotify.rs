@@ -125,6 +125,7 @@ pub struct Item {
     duration_ms: u128,
     preview_url: String,
     album: Album,
+    artists: Vec<Artist>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
