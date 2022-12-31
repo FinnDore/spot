@@ -26,7 +26,7 @@ async fn main() {
 
     let state_two = state.clone();
     let app = Router::new()
-        .route("/current_song", get(get_current_song))
+        .route("/", get(get_current_song))
         .layer(Extension(state))
         .layer(Extension(state_two));
 
