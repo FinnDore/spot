@@ -48,6 +48,10 @@ type SharedState = Arc<Mutex<State>>;
 
 async fn get_current_song(Extension(state): Extension<SharedState>) -> Response {
     let spot = &mut state.lock().await.spot;
+    println!(
+        "Getting current song time {}",
+        chrono::Utc::now().to_rfc2822()
+    );
     match spot.get_current_song().await {
         Ok(song) => Json(song).into_response(),
         Err(_) => Response::builder()
