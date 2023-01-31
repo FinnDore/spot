@@ -29,7 +29,7 @@ async fn main() {
         .layer(
             CorsLayer::new()
                 .allow_headers(vec![http::header::CONTENT_TYPE])
-                .allow_origin("s.finndore.dev".parse::<HeaderValue>().unwrap()),
+                .allow_origin("https://s.finndore.dev".parse::<HeaderValue>().unwrap()),
         )
         .layer(Extension(state))
         .layer(Extension(state_two));
