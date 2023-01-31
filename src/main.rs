@@ -11,7 +11,7 @@ use axum::{
 };
 use spotify::Spot;
 use tokio::sync::Mutex;
-use tower_http::cors::{Any, CorsLayer};
+use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
@@ -25,12 +25,12 @@ async fn main() {
 
     let state_two = state.clone();
     let app = Router::new()
+        .route("/", get(get_current_song))
         .layer(
             CorsLayer::new()
                 .allow_headers(vec![http::header::CONTENT_TYPE])
                 .allow_origin("*.finndore.dev".parse::<HeaderValue>().unwrap()),
         )
-        .route("/", get(get_current_song))
         .layer(Extension(state))
         .layer(Extension(state_two));
 
