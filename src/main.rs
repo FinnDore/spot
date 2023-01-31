@@ -4,15 +4,14 @@ use std::{env, sync::Arc};
 
 use axum::{
     body,
-    http::StatusCode,
+    http::{self, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::get,
     Extension, Json, Router,
 };
-
 use spotify::Spot;
-
 use tokio::sync::Mutex;
+use tower_http::cors::{Any, CorsLayer};
 
 #[tokio::main]
 async fn main() {
@@ -26,6 +25,11 @@ async fn main() {
 
     let state_two = state.clone();
     let app = Router::new()
+        .layer(
+            CorsLayer::new()
+                .allow_headers(vec![http::header::CONTENT_TYPE])
+                .allow_origin("*.finndore.dev".parse::<HeaderValue>().unwrap()),
+        )
         .route("/", get(get_current_song))
         .layer(Extension(state))
         .layer(Extension(state_two));
