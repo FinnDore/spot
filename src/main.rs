@@ -26,10 +26,12 @@ async fn main() {
     let state_two = state.clone();
     let app = Router::new()
         .route("/", get(get_current_song))
+        .route("/top-songs", get(get_top_songs))
         .layer(
             CorsLayer::new()
                 .allow_headers(vec![http::header::CONTENT_TYPE])
-                .allow_origin("https://s.finndore.dev".parse::<HeaderValue>().unwrap()),
+                .allow_origin("https://s.finndore.dev".parse::<HeaderValue>().unwrap())
+                .allow_origin("https://finndore.dev".parse::<HeaderValue>().unwrap()),
         )
         .layer(Extension(state))
         .layer(Extension(state_two));
@@ -58,6 +60,19 @@ async fn get_current_song(Extension(state): Extension<SharedState>) -> Response 
     );
     match spot.get_current_song().await {
         Ok(song) => Json(song).into_response(),
+        Err(_) => Response::builder()
+            .status(StatusCode::NO_CONTENT)
+            .body(body::Empty::new())
+            .unwrap()
+            .into_response(),
+    }
+}
+
+async fn get_top_songs(Extension(state): Extension<SharedState>) -> Response {
+    let spot = &mut state.lock().await.spot;
+    println!("Getting top songs time {}", chrono::Utc::now().to_rfc2822());
+    match spot.get_top_songs().await {
+        Ok(songs) => Json(songs).into_response(),
         Err(_) => Response::builder()
             .status(StatusCode::NO_CONTENT)
             .body(body::Empty::new())

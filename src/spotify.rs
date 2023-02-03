@@ -89,7 +89,6 @@ impl Spot {
         }
 
         let body = response.text().await;
-        // 204 send without body when no song
         if let Err(err) = &body {
             println!("Could not decode spotify body {:?}", err);
             return Err(());
@@ -103,6 +102,51 @@ impl Spot {
         }
 
         Ok(json.unwrap())
+    }
+
+    pub async fn get_top_songs(&mut self) -> Result<Vec<Item>, ()> {
+        if chrono::Utc::now().timestamp() > self.expires_at {
+            if let Err(_) = self.get_token().await {
+                return Err(());
+            }
+        }
+
+        let client = reqwest::Client::new();
+        let res = client
+            .get("https://api.spotify.com/v1/me/top/tracks?limit=4&time_range=short_term")
+            .header("authorization", format!("Bearer {:}", self.token))
+            .send()
+            .await;
+
+        if let Err(error) = &res {
+            println!("Could not get current song ${:#?}", error);
+            return Err(());
+        }
+
+        let response = res.unwrap();
+        if !response.status().is_success() {
+            println!("Could not get current song ${:#?}", response);
+            return Err(());
+        }
+
+        if response.status() == 204 {
+            // No song playing
+            return Err(());
+        }
+
+        let body = response.text().await;
+        if let Err(err) = &body {
+            println!("Could not decode spotify body {:?}", err);
+            return Err(());
+        }
+
+        let json: Result<TopItems, serde_json::Error> = serde_json::from_str(&body.unwrap());
+        if let Err(err) = &json {
+            println!("Could not parse spotify response to json {:?}", err);
+            return Err(());
+        }
+
+        return Ok(json.unwrap().items);
     }
 }
 
@@ -158,4 +202,9 @@ struct Image {
     height: u128,
     url: String,
     width: u128,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct TopItems {
+    items: Vec<Item>,
 }
