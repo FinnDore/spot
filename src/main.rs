@@ -31,7 +31,8 @@ async fn main() {
             CorsLayer::new()
                 .allow_headers(vec![http::header::CONTENT_TYPE])
                 .allow_origin("https://s.finndore.dev".parse::<HeaderValue>().unwrap())
-                .allow_origin("https://finndore.dev".parse::<HeaderValue>().unwrap()),
+                .allow_origin("https://finndore.dev".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap()),
         )
         .layer(Extension(state))
         .layer(Extension(state_two));
