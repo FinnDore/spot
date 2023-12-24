@@ -215,12 +215,15 @@ impl Spot {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct AuthResponse {
+    #[serde(rename(serialize = "accessToken"))]
     access_token: String,
+    #[serde(rename(serialize = "expiresIn"))]
     expires_in: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CurrentSong {
+    #[serde(rename(serialize = "progressMs"))]
     progress_ms: i64,
     timestamp: i64,
     item: Item,
@@ -230,17 +233,22 @@ pub struct CurrentSong {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Item {
     name: String,
+    #[serde(rename(serialize = "durationMs"))]
     duration_ms: i64,
+    #[serde(rename(serialize = "preview_url"))]
     preview_url: String,
     album: Album,
     artists: Vec<Artist>,
+    #[serde(rename(serialize = "externalUrls"))]
     external_urls: ExternalUrls,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Album {
+    #[serde(rename(serialize = "albumType"))]
     album_type: String,
     artists: Vec<Artist>,
+    #[serde(rename(serialize = "externalUrls"))]
     external_urls: ExternalUrls,
     images: Vec<Image>,
     name: String,
@@ -249,6 +257,7 @@ pub struct Album {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Artist {
+    #[serde(rename(serialize = "externalUrls"))]
     external_urls: ExternalUrls,
     href: String,
     name: String,
