@@ -4,14 +4,14 @@ use std::{env, sync::Arc};
 
 use axum::{
     body,
-    http::{self, HeaderValue, StatusCode},
+    extract::Path,
+    http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
-    routing::get,
+    routing::{get, post},
     Extension, Json, Router,
 };
-use spotify::Spot;
+use spotify::{MediaState, Spot};
 use tokio::sync::Mutex;
-use tower_http::cors::CorsLayer;
 
 #[tokio::main]
 async fn main() {
@@ -21,17 +21,14 @@ async fn main() {
             env::var("SPOTIFY_CLIENT_SECRET").expect("Expected SPOTIFY_CLIENT_SECRET env var"),
             env::var("SPOTIFY_REFRESH_TOKEN").expect("Expected SPOTIFY_REFRESH_TOKEN env var"),
         ),
+        token: env::var("EXTERNAL_AUTH_TOKEN").expect("Expected EXTERNAL_AUTH_TOKEN env var"),
     }));
 
     let state_two = state.clone();
     let app = Router::new()
         .route("/", get(get_current_song))
         .route("/top-songs", get(get_top_songs))
-        .layer(
-            CorsLayer::new()
-                .allow_headers(vec![http::header::CONTENT_TYPE])
-                .allow_origin("https://s.finndore.dev".parse::<HeaderValue>().unwrap()),
-        )
+        .route("/player/:player_state", post(update_player_state))
         .layer(Extension(state))
         .layer(Extension(state_two));
 
@@ -47,9 +44,43 @@ async fn main() {
 
 struct State {
     spot: Spot,
+    token: String,
 }
 
 type SharedState = Arc<Mutex<State>>;
+
+async fn update_player_state(
+    Path(new_player_state): Path<MediaState>,
+    Extension(state): Extension<SharedState>,
+    headers: HeaderMap,
+) -> Response {
+    let state = &mut state.lock().await;
+    let incoming_token = headers.get("Authorization");
+    if incoming_token.is_none() || incoming_token.unwrap() != &state.token {
+        return Response::builder()
+            .status(StatusCode::UNAUTHORIZED)
+            .body(body::Empty::new())
+            .unwrap()
+            .into_response();
+    }
+
+    println!(
+        "Updating player state time {}",
+        chrono::Utc::now().to_rfc2822()
+    );
+    match state.spot.update_player_state(new_player_state).await {
+        Ok(_) => Response::builder()
+            .status(StatusCode::OK)
+            .body(body::Empty::new())
+            .unwrap()
+            .into_response(),
+        Err(_) => Response::builder()
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
+            .body(body::Empty::new())
+            .unwrap()
+            .into_response(),
+    }
+}
 
 async fn get_current_song(Extension(state): Extension<SharedState>) -> Response {
     let spot = &mut state.lock().await.spot;
