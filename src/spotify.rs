@@ -1,5 +1,6 @@
-use openssl::error;
+use axum::body;
 use serde::{Deserialize, Serialize};
+use strum_macros::{Display, EnumString};
 
 const TEN_SECONDS: i64 = 10000;
 const TEN_MINUTES: i64 = TEN_SECONDS * 60;
@@ -50,8 +51,13 @@ impl Spot {
             return Err(());
         }
 
-        let body = res.unwrap().text().await;
+        let response = res.unwrap();
+        if !response.status().is_success() {
+            println!("Could not get users token ${:#?}", response);
+            return Err(());
+        }
 
+        let body = response.text().await;
         if let Err(err) = &body {
             println!("Could not decode spotify body {:?}", err);
             return Err(());
@@ -122,7 +128,6 @@ impl Spot {
         }
 
         let json = serde_json::from_str(&body.unwrap());
-
         if let Err(err) = &json {
             println!("Could not parse spotify response to json {:?}", err);
             errored = true;
@@ -134,6 +139,7 @@ impl Spot {
             self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
             return Err(());
         }
+
         let response_json: CurrentSong = json.unwrap();
         self.current_song_cached_response = Some(response_json.clone());
         self.current_song_cached_till = chrono::Utc::now().timestamp_millis()
@@ -143,7 +149,6 @@ impl Spot {
             );
 
         self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
-
         Ok(response_json)
     }
 
@@ -182,8 +187,10 @@ impl Spot {
         }
 
         let body = response.text().await;
+
+        println!("response: {:?} ", body);
         if let Err(err) = &body {
-            println!("Could not decode spotify body {:?}", err);
+            println!("Could not decode spotify body {:?} {:?}", err, body);
             errored = true;
         }
 
@@ -206,19 +213,55 @@ impl Spot {
 
         return Ok(json.items);
     }
+
+    pub async fn update_player_state(&mut self, state: MediaState) -> Result<(), ()> {
+        if chrono::Utc::now().timestamp() > self.auth_expires_at {
+            if let Err(_) = self.get_token().await {
+                return Err(());
+            }
+        }
+
+        let client = reqwest::Client::new();
+        let base_request = match state {
+            MediaState::Play | MediaState::Pause => {
+                client.put(format!("https://api.spotify.com/v1/me/player/{:}", state))
+            }
+            MediaState::Next | MediaState::Previous => {
+                client.post(format!("https://api.spotify.com/v1/me/player/{:}", state))
+            }
+        };
+
+        let res = base_request
+            .header("authorization", format!("Bearer {:}", self.token))
+            .body(body::Body::from("{}"))
+            .send()
+            .await;
+
+        if let Err(error) = &res {
+            println!("Could not change media state ${:#?}", error);
+            return Err(());
+        }
+
+        let response = res.unwrap();
+        if !response.status().is_success() {
+            println!("Could not change media state ${:#?}", response);
+            return Err(());
+        }
+
+        Ok(())
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all(serialize = "camelCase"))]
 struct AuthResponse {
-    #[serde(rename(serialize = "accessToken"))]
     access_token: String,
-    #[serde(rename(serialize = "expiresIn"))]
     expires_in: i64,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct CurrentSong {
-    #[serde(rename(serialize = "progressMs"))]
     progress_ms: i64,
     timestamp: i64,
     item: Item,
@@ -226,24 +269,21 @@ pub struct CurrentSong {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct Item {
     name: String,
-    #[serde(rename(serialize = "durationMs"))]
     duration_ms: i64,
-    #[serde(rename(serialize = "preview_url"))]
     preview_url: String,
     album: Album,
     artists: Vec<Artist>,
-    #[serde(rename(serialize = "externalUrls"))]
     external_urls: ExternalUrls,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct Album {
-    #[serde(rename(serialize = "albumType"))]
     album_type: String,
     artists: Vec<Artist>,
-    #[serde(rename(serialize = "externalUrls"))]
     external_urls: ExternalUrls,
     images: Vec<Image>,
     name: String,
@@ -251,8 +291,8 @@ pub struct Album {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all(serialize = "camelCase"))]
 pub struct Artist {
-    #[serde(rename(serialize = "externalUrls"))]
     external_urls: ExternalUrls,
     href: String,
     name: String,
@@ -274,4 +314,17 @@ struct Image {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TopItems {
     items: Vec<Item>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Display, Clone)]
+#[serde(rename_all = "lowercase")]
+pub enum MediaState {
+    #[strum(serialize = "play")]
+    Play,
+    #[strum(serialize = "pause")]
+    Pause,
+    #[strum(serialize = "next")]
+    Next,
+    #[strum(serialize = "Previous")]
+    Previous,
 }
