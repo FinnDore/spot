@@ -1,3 +1,4 @@
+use openssl::error;
 use serde::{Deserialize, Serialize};
 
 const TEN_SECONDS: i64 = 10000;
@@ -97,47 +98,42 @@ impl Spot {
             .send()
             .await;
 
+        let mut errored = false;
         if let Err(error) = &res {
             println!("Could not get current song ${:#?}", error);
-            return Err(());
+            errored = true;
         }
 
         let response = res.unwrap();
         if !response.status().is_success() {
             println!("Could not get current song ${:#?}", response);
-            self.current_song_cached_response = None;
-            self.current_song_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS;
-            self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
-            return Err(());
+            errored = true;
         }
 
         if response.status() == 204 {
             // No song playing
-            self.current_song_cached_response = None;
-            self.current_song_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS;
-            self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
-            return Err(());
+            errored = true;
         }
 
         let body = response.text().await;
         if let Err(err) = &body {
             println!("Could not decode spotify body {:?}", err);
-            self.current_song_cached_response = None;
-            self.current_song_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS;
-            self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
-            return Err(());
+            errored = true;
         }
 
         let json = serde_json::from_str(&body.unwrap());
 
         if let Err(err) = &json {
             println!("Could not parse spotify response to json {:?}", err);
+            errored = true;
+        }
+
+        if errored {
             self.current_song_cached_response = None;
             self.current_song_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS;
             self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
             return Err(());
         }
-
         let response_json: CurrentSong = json.unwrap();
         self.current_song_cached_response = Some(response_json.clone());
         self.current_song_cached_till = chrono::Utc::now().timestamp_millis()
@@ -173,32 +169,31 @@ impl Spot {
             .send()
             .await;
 
+        let mut errored = false;
         if let Err(error) = &res {
             println!("Could not get current song ${:#?}", error);
-            self.top_songs_cached_response = None;
-            self.top_songs_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS * 2;
-            return Err(());
+            errored = true;
         }
 
         let response = res.unwrap();
         if !response.status().is_success() {
             println!("Could not get top song ${:#?}", response);
-            self.top_songs_cached_response = None;
-            self.top_songs_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS * 2;
-            return Err(());
+            errored = true;
         }
 
         let body = response.text().await;
         if let Err(err) = &body {
             println!("Could not decode spotify body {:?}", err);
-            self.top_songs_cached_response = None;
-            self.top_songs_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS * 2;
-            return Err(());
+            errored = true;
         }
 
         let json: Result<TopItems, serde_json::Error> = serde_json::from_str(&body.unwrap());
         if let Err(err) = &json {
             println!("Could not parse spotify response to json {:?}", err);
+            errored = true;
+        }
+
+        if errored {
             self.top_songs_cached_response = None;
             self.top_songs_cached_till = chrono::Utc::now().timestamp_millis() + TEN_SECONDS * 2;
             return Err(());
