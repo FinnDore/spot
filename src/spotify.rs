@@ -325,6 +325,6 @@ pub enum MediaState {
     Pause,
     #[strum(serialize = "next")]
     Next,
-    #[strum(serialize = "Previous")]
+    #[strum(serialize = "previous")]
     Previous,
 }
