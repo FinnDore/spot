@@ -64,7 +64,10 @@ async fn update_player_state(
             .into_response();
     }
 
-    println!("Updating player state time {}", chrono::Utc::now().to_rfc2822())
+    println!(
+        "Updating player state time {}",
+        chrono::Utc::now().to_rfc2822()
+    );
     match state.spot.update_player_state(new_player_state).await {
         Ok(_) => Response::builder()
             .status(StatusCode::OK)
