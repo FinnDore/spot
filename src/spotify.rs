@@ -248,6 +248,9 @@ impl Spot {
             return Err(());
         }
 
+        self.current_song_cached_response = None;
+        self.current_song_cached_till = chrono::Utc::now().timestamp_millis();
+        self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
         Ok(())
     }
 }
