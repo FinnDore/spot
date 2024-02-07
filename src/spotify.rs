@@ -188,7 +188,6 @@ impl Spot {
 
         let body = response.text().await;
 
-        println!("response: {:?} ", body);
         if let Err(err) = &body {
             println!("Could not decode spotify body {:?} {:?}", err, body);
             errored = true;
@@ -276,7 +275,7 @@ pub struct CurrentSong {
 pub struct Item {
     name: String,
     duration_ms: i64,
-    preview_url: String,
+    preview_url: Option<String>,
     album: Album,
     artists: Vec<Artist>,
     external_urls: ExternalUrls,
