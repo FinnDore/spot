@@ -1,0 +1,214 @@
+[
+    {
+        "name": "huh",
+        "durationMs": 107084,
+        "previewUrl": "https://p.scdn.co/mp3-preview/b5f7bd681b770e0ed75eb1cac7c5cec1d5c9877a?cid=d238d3da0bd04d7d8aa51ae5e22f03be",
+        "album": {
+            "albumType": "SINGLE",
+            "artists": [
+                {
+                    "externalUrls": {
+                        "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                    },
+                    "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                    "name": "glaive",
+                    "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+                }
+            ],
+            "externalUrls": {
+                "spotify": "https://open.spotify.com/album/4QmxWDujWNkkp8Wc0vn8we"
+            },
+            "images": [
+                {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b273ec894271a2d76ab5e899e6b3",
+                    "width": 640
+                },
+                {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e02ec894271a2d76ab5e899e6b3",
+                    "width": 300
+                },
+                {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d00004851ec894271a2d76ab5e899e6b3",
+                    "width": 64
+                }
+            ],
+            "name": "huh",
+            "uri": "spotify:album:4QmxWDujWNkkp8Wc0vn8we"
+        },
+        "artists": [
+            {
+                "externalUrls": {
+                    "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                },
+                "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                "name": "glaive",
+                "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+            }
+        ],
+        "externalUrls": {
+            "spotify": "https://open.spotify.com/track/0uLIQiuVCXBoe2w8n4Thyz"
+        }
+    },
+    {
+        "name": "Even When The Sun is Dead",
+        "durationMs": 136771,
+        "previewUrl": null,
+        "album": {
+            "albumType": "SINGLE",
+            "artists": [
+                {
+                    "externalUrls": {
+                        "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                    },
+                    "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                    "name": "glaive",
+                    "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+                }
+            ],
+            "externalUrls": {
+                "spotify": "https://open.spotify.com/album/4ovH1PXuem3niOx80bm6NB"
+            },
+            "images": [
+                {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b273e9f86b9cac362032489bfb5f",
+                    "width": 640
+                },
+                {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e02e9f86b9cac362032489bfb5f",
+                    "width": 300
+                },
+                {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d00004851e9f86b9cac362032489bfb5f",
+                    "width": 64
+                }
+            ],
+            "name": "Even When The Sun is Dead",
+            "uri": "spotify:album:4ovH1PXuem3niOx80bm6NB"
+        },
+        "artists": [
+            {
+                "externalUrls": {
+                    "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                },
+                "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                "name": "glaive",
+                "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+            }
+        ],
+        "externalUrls": {
+            "spotify": "https://open.spotify.com/track/3Rm5hhQcNKlz9l8baK36Qb"
+        }
+    },
+    {
+        "name": "Even When The Sun is Dead",
+        "durationMs": 136771,
+        "previewUrl": null,
+        "album": {
+            "albumType": "SINGLE",
+            "artists": [
+                {
+                    "externalUrls": {
+                        "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                    },
+                    "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                    "name": "glaive",
+                    "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+                }
+            ],
+            "externalUrls": {
+                "spotify": "https://open.spotify.com/album/10Se7e9BSliI7oLITqATVn"
+            },
+            "images": [
+                {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b273278b34a090e0d8480ba772dd",
+                    "width": 640
+                },
+                {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e02278b34a090e0d8480ba772dd",
+                    "width": 300
+                },
+                {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d00004851278b34a090e0d8480ba772dd",
+                    "width": 64
+                }
+            ],
+            "name": "Even When The Sun is Dead",
+            "uri": "spotify:album:10Se7e9BSliI7oLITqATVn"
+        },
+        "artists": [
+            {
+                "externalUrls": {
+                    "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                },
+                "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                "name": "glaive",
+                "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+            }
+        ],
+        "externalUrls": {
+            "spotify": "https://open.spotify.com/track/7zH3Qm6lu296i2owAENBLk"
+        }
+    },
+    {
+        "name": "Even When The Sun is Dead",
+        "durationMs": 136771,
+        "previewUrl": "https://p.scdn.co/mp3-preview/fab90111869de0b2c33fb1c3d8e5e3a8b8abaada?cid=d238d3da0bd04d7d8aa51ae5e22f03be",
+        "album": {
+            "albumType": "SINGLE",
+            "artists": [
+                {
+                    "externalUrls": {
+                        "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                    },
+                    "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                    "name": "glaive",
+                    "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+                }
+            ],
+            "externalUrls": {
+                "spotify": "https://open.spotify.com/album/6UY3scinETf5qCiSe3iVL2"
+            },
+            "images": [
+                {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b27302b5bac345c93da84fab1cdb",
+                    "width": 640
+                },
+                {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e0202b5bac345c93da84fab1cdb",
+                    "width": 300
+                },
+                {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d0000485102b5bac345c93da84fab1cdb",
+                    "width": 64
+                }
+            ],
+            "name": "Even When The Sun is Dead",
+            "uri": "spotify:album:6UY3scinETf5qCiSe3iVL2"
+        },
+        "artists": [
+            {
+                "externalUrls": {
+                    "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                },
+                "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                "name": "glaive",
+                "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+            }
+        ],
+        "externalUrls": {
+            "spotify": "https://open.spotify.com/track/10b8TTSAwDPqej2wx12pWL"
+        }
+    }
+]

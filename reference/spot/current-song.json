@@ -1,0 +1,58 @@
+{
+    "progressMs": 55040,
+    "timestamp": 1707661401567,
+    "item": {
+        "name": "all dogs go to heaven - outro",
+        "durationMs": 143414,
+        "previewUrl": "https://p.scdn.co/mp3-preview/b7e815ed9cd64cdc69b28fc4acffd332987132a0?cid=d238d3da0bd04d7d8aa51ae5e22f03be",
+        "album": {
+            "albumType": "single",
+            "artists": [
+                {
+                    "externalUrls": {
+                        "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                    },
+                    "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                    "name": "glaive",
+                    "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+                }
+            ],
+            "externalUrls": {
+                "spotify": "https://open.spotify.com/album/0nP4cdE33prgKeTaqNM0g8"
+            },
+            "images": [
+                {
+                    "height": 640,
+                    "url": "https://i.scdn.co/image/ab67616d0000b273e15a6cb922190eb26943884c",
+                    "width": 640
+                },
+                {
+                    "height": 300,
+                    "url": "https://i.scdn.co/image/ab67616d00001e02e15a6cb922190eb26943884c",
+                    "width": 300
+                },
+                {
+                    "height": 64,
+                    "url": "https://i.scdn.co/image/ab67616d00004851e15a6cb922190eb26943884c",
+                    "width": 64
+                }
+            ],
+            "name": "old dog, new tricks",
+            "uri": "spotify:album:0nP4cdE33prgKeTaqNM0g8"
+        },
+        "artists": [
+            {
+                "externalUrls": {
+                    "spotify": "https://open.spotify.com/artist/4cJKDGSv4Dz9QycXYmo565"
+                },
+                "href": "https://api.spotify.com/v1/artists/4cJKDGSv4Dz9QycXYmo565",
+                "name": "glaive",
+                "uri": "spotify:artist:4cJKDGSv4Dz9QycXYmo565"
+            }
+        ],
+        "externalUrls": {
+            "spotify": "https://open.spotify.com/track/4SFrL3FPwmWxmbVDJPeoiI"
+        }
+    },
+    "isPlaying": true
+}
