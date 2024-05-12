@@ -169,7 +169,7 @@ impl Spot {
 
         let client = reqwest::Client::new();
         let res = client
-            .get("https://api.spotify.com/v1/me/top/tracks?limit=4&time_range=short_term")
+            .get("https://api.spotify.com/v1/me/top/tracks?limit=32&time_range=short_term")
             .header("authorization", format!("Bearer {:}", self.token))
             .send()
             .await;

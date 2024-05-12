@@ -4,14 +4,18 @@ use std::{env, sync::Arc};
 
 use axum::{
     body,
-    extract::Path,
-    http::{HeaderMap, StatusCode},
+    extract::{Path, Query},
+    http::{HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
     Extension, Json, Router,
 };
+use serde::Deserialize;
 use spotify::{MediaState, Spot};
 use tokio::sync::Mutex;
+use tower_http::cors::CorsLayer;
+
+use crate::spotify::Item;
 
 #[tokio::main]
 async fn main() {
@@ -29,6 +33,11 @@ async fn main() {
         .route("/", get(get_current_song))
         .route("/top-songs", get(get_top_songs))
         .route("/player/:player_state", post(update_player_state))
+        .layer(
+            CorsLayer::new()
+                .allow_origin("https://finndore.dev".parse::<HeaderValue>().unwrap())
+                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap()),
+        )
         .layer(Extension(state))
         .layer(Extension(state_two));
 
@@ -98,11 +107,20 @@ async fn get_current_song(Extension(state): Extension<SharedState>) -> Response 
     }
 }
 
-async fn get_top_songs(Extension(state): Extension<SharedState>) -> Response {
+#[derive(Deserialize)]
+struct TopSongsQuery {
+    limit: Option<usize>,
+}
+
+async fn get_top_songs(
+    Extension(state): Extension<SharedState>,
+    query: Option<Query<TopSongsQuery>>,
+) -> Response {
+    let limit = query.map(|q| q.limit).flatten().unwrap_or(4);
     let spot = &mut state.lock().await.spot;
     println!("Getting top songs time {}", chrono::Utc::now().to_rfc2822());
     match spot.get_top_songs().await {
-        Ok(songs) => Json(songs).into_response(),
+        Ok(songs) => Json(songs.into_iter().take(limit).collect::<Vec<Item>>()).into_response(),
         Err(_) => Response::builder()
             .status(StatusCode::NO_CONTENT)
             .body(body::Empty::new())
