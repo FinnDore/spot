@@ -14,11 +14,52 @@ use serde::Deserialize;
 use spotify::{MediaState, Spot};
 use tokio::sync::Mutex;
 use tower_http::cors::{AllowOrigin, CorsLayer};
+use tracing::{info, level_filters::LevelFilter};
+use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
 use crate::spotify::Item;
 
 #[tokio::main]
 async fn main() {
+    let env = std::env::var("ENV").unwrap_or("production".into());
+    if env == "development" {
+        tracing_subscriber::fmt().without_time().init();
+    } else {
+        let env_filter = EnvFilter::builder()
+            .with_default_directive(LevelFilter::DEBUG.into())
+            .from_env()
+            .expect("Failed to create env filter invalid RUST_LOG env var");
+
+        let registry = Registry::default().with(env_filter).with(fmt::layer());
+
+        if let Ok(_) = std::env::var("AXIOM_TOKEN") {
+            let axiom_layer = tracing_axiom::builder()
+                .with_service_name("spot")
+                .with_tags(&[(
+                    &"deployment_id",
+                    &std::env::var("RAILWAY_DEPLOYMENT_ID")
+                        .map(|s| {
+                            s + "-"
+                                + std::env::var("RAILWAY_DEPLOYMENT_ID")
+                                    .unwrap_or("unknown_replica".into())
+                                    .as_str()
+                        })
+                        .unwrap_or("unknown_deployment".into()),
+                )])
+                .with_tags(&[(&"service.name", "spot".into())])
+                .layer()
+                .expect("Axiom layer failed to initialize");
+
+            registry
+                .with(axiom_layer)
+                .try_init()
+                .expect("Failed to initialize tracing with axiom");
+            info!("Initialized tracing with axiom");
+        } else {
+            registry.try_init().expect("Failed to initialize tracing");
+        }
+    };
+
     let state = Arc::new(Mutex::new(State {
         spot: Spot::new(
             env::var("SPOTIFY_CLIENT_ID").expect("Expected SPOTIFY_CLIENT_ID env var"),
@@ -44,7 +85,7 @@ async fn main() {
                     .into_iter()
                     .any(|allowed_origin| host.ends_with(allowed_origin));
                 }
-                println!("Cors layer failed to parse origin header");
+                info!(?origin, "Cors layer failed to parse origin header");
                 false
             },
         )))
@@ -53,7 +94,7 @@ async fn main() {
 
     let port = std::env::var("PORT").unwrap_or("3001".to_string());
     let host = format!("0.0.0.0:{:}", port);
-    println!("Running server on {:}", host);
+    info!("Running server on {:}", host);
 
     axum::Server::bind(&host.to_string().parse().unwrap())
         .serve(app.into_make_service())
@@ -83,10 +124,7 @@ async fn update_player_state(
             .into_response();
     }
 
-    println!(
-        "Updating player state time {}",
-        chrono::Utc::now().to_rfc2822()
-    );
+    info!(%new_player_state, "Updating player state");
     match state.spot.update_player_state(new_player_state).await {
         Ok(_) => Response::builder()
             .status(StatusCode::OK)
@@ -103,10 +141,7 @@ async fn update_player_state(
 
 async fn get_current_song(Extension(state): Extension<SharedState>) -> Response {
     let spot = &mut state.lock().await.spot;
-    println!(
-        "Getting current song time {}",
-        chrono::Utc::now().to_rfc2822()
-    );
+    info!("Getting current song ",);
     match spot.get_current_song().await {
         Ok(song) => Json(song).into_response(),
         Err(_) => Response::builder()
@@ -128,7 +163,7 @@ async fn get_top_songs(
 ) -> Response {
     let limit = query.map(|q| q.limit).flatten().unwrap_or(4);
     let spot = &mut state.lock().await.spot;
-    println!("Getting top songs time {}", chrono::Utc::now().to_rfc2822());
+    info!("Getting top songs");
     match spot.get_top_songs().await {
         Ok(songs) => Json(songs.into_iter().take(limit).collect::<Vec<Item>>()).into_response(),
         Err(_) => Response::builder()

@@ -1,6 +1,7 @@
 use axum::body;
 use serde::{Deserialize, Serialize};
-use strum_macros::{Display, EnumString};
+use strum_macros::Display;
+use tracing::{error, info};
 
 const TEN_SECONDS: i64 = 10000;
 const TEN_MINUTES: i64 = TEN_SECONDS * 60;
@@ -47,26 +48,26 @@ impl Spot {
             .await;
 
         if let Err(error) = &res {
-            println!("Could not get users token ${:#?}", error);
+            error!(%error, "Could not get users token");
             return Err(());
         }
 
         let response = res.unwrap();
         if !response.status().is_success() {
-            println!("Could not get users token ${:#?}", response);
+            error!(?response, "Could not get users token");
             return Err(());
         }
 
         let body = response.text().await;
         if let Err(err) = &body {
-            println!("Could not decode spotify body {:?}", err);
+            error!(%err, "Could not decode spotify body");
             return Err(());
         }
 
         let json = serde_json::from_str(&body.unwrap());
 
         if let Err(err) = &json {
-            println!("Could not parse spotify response to json {:?}", err);
+            error!(%err, "Could not parse spotify response to json");
             return Err(());
         }
 
@@ -74,7 +75,7 @@ impl Spot {
         self.token = json.access_token;
         self.auth_expires_at = json.expires_in + chrono::Utc::now().timestamp();
 
-        println!("Updated spotify token");
+        info!("Updated spotify token");
         Ok(())
     }
 
@@ -106,13 +107,13 @@ impl Spot {
 
         let mut errored = false;
         if let Err(error) = &res {
-            println!("Could not get current song ${:#?}", error);
+            error!(%error, "Could not get current song");
             errored = true;
         }
 
         let response = res.unwrap();
         if !response.status().is_success() {
-            println!("Could not get current song ${:#?}", response);
+            error!(?response, "Could not get current song");
             errored = true;
         }
 
@@ -123,13 +124,13 @@ impl Spot {
 
         let body = response.text().await;
         if let Err(err) = &body {
-            println!("Could not decode spotify body {:?}", err);
+            error!(%err, "Could not decode spotify body");
             errored = true;
         }
 
         let json = serde_json::from_str(&body.unwrap());
         if let Err(err) = &json {
-            println!("Could not parse spotify response to json {:?}", err);
+            error!(%err,"Could not parse spotify response to json");
             errored = true;
         }
 
@@ -176,26 +177,26 @@ impl Spot {
 
         let mut errored = false;
         if let Err(error) = &res {
-            println!("Could not get current song ${:#?}", error);
+            error!(%error,"Could not get current song");
             errored = true;
         }
 
         let response = res.unwrap();
         if !response.status().is_success() {
-            println!("Could not get top song ${:#?}", response);
+            error!(?response, "Could not get top song");
             errored = true;
         }
 
         let body = response.text().await;
 
         if let Err(err) = &body {
-            println!("Could not decode spotify body {:?} {:?}", err, body);
+            error!(?body, ?err, "Could not decode spotify body");
             errored = true;
         }
 
         let json: Result<TopItems, serde_json::Error> = serde_json::from_str(&body.unwrap());
         if let Err(err) = &json {
-            println!("Could not parse spotify response to json {:?}", err);
+            error!(%err, "Could not parse spotify response to json");
             errored = true;
         }
 
@@ -237,13 +238,13 @@ impl Spot {
             .await;
 
         if let Err(error) = &res {
-            println!("Could not change media state ${:#?}", error);
+            error!(%error, "Could not change media state");
             return Err(());
         }
 
         let response = res.unwrap();
         if !response.status().is_success() {
-            println!("Could not change media state ${:#?}", response);
+            error!(?response, "Could not change media state");
             return Err(());
         }
 
