@@ -5,7 +5,7 @@ use std::{env, sync::Arc};
 use axum::{
     body,
     extract::{Path, Query},
-    http::{HeaderMap, HeaderValue, StatusCode},
+    http::{request::Parts, HeaderMap, HeaderValue, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
     Extension, Json, Router,
@@ -13,7 +13,7 @@ use axum::{
 use serde::Deserialize;
 use spotify::{MediaState, Spot};
 use tokio::sync::Mutex;
-use tower_http::cors::CorsLayer;
+use tower_http::cors::{AllowOrigin, CorsLayer};
 
 use crate::spotify::Item;
 
@@ -33,11 +33,21 @@ async fn main() {
         .route("/", get(get_current_song))
         .route("/top-songs", get(get_top_songs))
         .route("/player/:player_state", post(update_player_state))
-        .layer(
-            CorsLayer::new()
-                .allow_origin("https://finndore.dev".parse::<HeaderValue>().unwrap())
-                .allow_origin("http://localhost:3000".parse::<HeaderValue>().unwrap()),
-        )
+        .layer(CorsLayer::new().allow_origin(AllowOrigin::predicate(
+            |origin: &HeaderValue, _request_parts: &Parts| {
+                if let Ok(host) = origin.to_str() {
+                    return [
+                        "https://finndore.dev",
+                        "finnnn.vercel.app",
+                        "http://localhost:3000",
+                    ]
+                    .into_iter()
+                    .any(|allowed_origin| host.ends_with(allowed_origin));
+                }
+                println!("Cors layer failed to parse origin header");
+                false
+            },
+        )))
         .layer(Extension(state))
         .layer(Extension(state_two));
 
