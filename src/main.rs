@@ -14,12 +14,13 @@ use serde::Deserialize;
 use spotify::{MediaState, Spot};
 use tokio::sync::Mutex;
 use tower_http::cors::{AllowOrigin, CorsLayer};
-use tracing::{info, level_filters::LevelFilter};
+use tracing::{info, instrument, level_filters::LevelFilter};
 use tracing_subscriber::{fmt, prelude::*, EnvFilter, Registry};
 
 use crate::spotify::Item;
 
 #[tokio::main]
+#[instrument]
 async fn main() {
     let env = std::env::var("ENV").unwrap_or("production".into());
     if env == "development" {
@@ -109,6 +110,7 @@ struct State {
 
 type SharedState = Arc<Mutex<State>>;
 
+#[instrument(skip(state, headers))]
 async fn update_player_state(
     Path(new_player_state): Path<MediaState>,
     Extension(state): Extension<SharedState>,
@@ -139,6 +141,7 @@ async fn update_player_state(
     }
 }
 
+#[instrument(skip(state))]
 async fn get_current_song(Extension(state): Extension<SharedState>) -> Response {
     let spot = &mut state.lock().await.spot;
     info!("Getting current song ",);
@@ -157,6 +160,7 @@ struct TopSongsQuery {
     limit: Option<usize>,
 }
 
+#[instrument(skip(state, query))]
 async fn get_top_songs(
     Extension(state): Extension<SharedState>,
     query: Option<Query<TopSongsQuery>>,

@@ -1,7 +1,7 @@
 use axum::body;
 use serde::{Deserialize, Serialize};
 use strum_macros::Display;
-use tracing::{error, info};
+use tracing::{error, info, instrument};
 
 const TEN_SECONDS: i64 = 10000;
 const TEN_MINUTES: i64 = TEN_SECONDS * 60;
@@ -35,6 +35,7 @@ impl Spot {
         }
     }
 
+    #[instrument(skip(self))]
     pub async fn get_token(&mut self) -> Result<(), ()> {
         let client = reqwest::Client::new();
         let res = client
@@ -79,6 +80,7 @@ impl Spot {
         Ok(())
     }
 
+    #[instrument(skip(self))]
     pub async fn get_current_song(&mut self) -> Result<CurrentSong, ()> {
         if chrono::Utc::now().timestamp_millis() < self.current_song_cached_till
             && self.current_song_cached_response.is_some()
@@ -153,6 +155,7 @@ impl Spot {
         Ok(response_json)
     }
 
+    #[instrument(skip(self))]
     pub async fn get_top_songs(&mut self) -> Result<Vec<Item>, ()> {
         if chrono::Utc::now().timestamp_millis() < self.top_songs_cached_till
             && self.top_songs_cached_response.is_some()
@@ -214,6 +217,7 @@ impl Spot {
         return Ok(json.items);
     }
 
+    #[instrument(skip(self))]
     pub async fn update_player_state(&mut self, state: MediaState) -> Result<(), ()> {
         if chrono::Utc::now().timestamp() > self.auth_expires_at {
             if let Err(_) = self.get_token().await {
