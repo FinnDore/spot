@@ -41,6 +41,7 @@ impl Spot {
         let res = client
             .post("https://accounts.spotify.com/api/token")
             .basic_auth(&self.client_id, Some(&self.client_secret))
+            .header("Content-Type", "application/x-www-form-urlencoded")
             .form(&[
                 ("grant_type", "refresh_token"),
                 ("refresh_token", &self.refresh_token),
@@ -55,7 +56,7 @@ impl Spot {
 
         let response = res.unwrap();
         if !response.status().is_success() {
-            error!(?response, "Could not get users token");
+            error!(rfresh = self.refresh_token, "Could not get users token");
             return Err(());
         }
 
@@ -81,7 +82,7 @@ impl Spot {
     }
 
     #[instrument(skip(self))]
-    pub async fn get_current_song(&mut self) -> Result<CurrentSong, ()> {
+    pub async fn get_current_song(&mut self) -> Result<Option<CurrentSong>, ()> {
         if chrono::Utc::now().timestamp_millis() < self.current_song_cached_till
             && self.current_song_cached_response.is_some()
         {
@@ -89,7 +90,7 @@ impl Spot {
             current_song.progress_ms +=
                 chrono::Utc::now().timestamp_millis() - self.current_song_cached_at;
 
-            return Ok(current_song);
+            return Ok(Some(current_song));
         } else if chrono::Utc::now().timestamp_millis() < self.current_song_cached_till {
             return Err(());
         }
@@ -121,7 +122,7 @@ impl Spot {
 
         if response.status() == 204 {
             // No song playing
-            errored = true;
+            return Ok(None);
         }
 
         let body = response.text().await;
@@ -152,7 +153,7 @@ impl Spot {
             );
 
         self.current_song_cached_at = chrono::Utc::now().timestamp_millis();
-        Ok(response_json)
+        Ok(Some(response_json))
     }
 
     #[instrument(skip(self))]

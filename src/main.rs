@@ -148,7 +148,7 @@ async fn get_current_song(Extension(state): Extension<SharedState>) -> Response 
     match spot.get_current_song().await {
         Ok(song) => Json(song).into_response(),
         Err(_) => Response::builder()
-            .status(StatusCode::NO_CONTENT)
+            .status(StatusCode::INTERNAL_SERVER_ERROR)
             .body(body::Empty::new())
             .unwrap()
             .into_response(),
